@@ -1,0 +1,62 @@
+/*
+$color1: rgba(41, 115, 115, 1); teal
+$color2: rgba(255, 133, 82, 1); orange
+$color3: rgba(230, 230, 230, 1); white
+$color4: rgba(190, 238, 98, 1); lime green
+$color5: rgba(57, 57, 58, 1); dark brown
+*/
+
+body {
+	background-color: #4f4f4f;
+	font-family: 'Coming Soon', sans-serif;
+	color: rgba(57, 57, 58, 1);
+}
+
+#main {
+	background-color: rgba(230, 230, 230, 1);
+	width: 400px;
+	height: 600px;	
+	max-width: 80vw;
+	max-height: 80vh;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 30px;
+	padding: 15px;
+}
+
+h3 {
+	font-family: 'Permanent Marker', serif;
+	text-align: center;
+}
+
+button {
+	border: 0;
+	border-radius: 6px;
+	padding: 10px;
+	display: block;
+	margin: 10px 0;
+	font-family: 'Coming Soon', sans-serif;
+	font-weight: 700;
+}
+
+.btn-orange {
+	background-color: rgba(255, 133, 82, 1);
+}
+
+.btn-green {
+	background-color:  rgba(190, 238, 98, 1);
+}
+
+.btn-teal {
+	background-color: rgba(41, 115, 115, 1);
+	color: rgba(230, 230, 230, 1);
+}
+
+.btn-orange:hover, .btn-green:hover, .btn-teal:hover {
+	background-color: #aaaaaa;
+	cursor: pointer;
+}
+
+.btn-full {
+	width: 100%;
+}

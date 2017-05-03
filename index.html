@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+	<link href="https://fonts.googleapis.com/css?family=Coming+Soon|Permanent+Marker" rel="stylesheet">
+	<link type="text/css" href="./stylesheets/main.css" rel="stylesheet">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js" type="text/javascript"></script>
+	<script src="javascripts/main.js" type="text/javascript"></script>
+</head>
+<body>
+	<div id="main">
+		<h3 data-bind="text: title"></h3>
+
+		<div data-bind="visible: state() == STATES().SHOPORCOOK">
+			<button data-bind="click: function(){state(STATES().SUPERMARKET)}" class="btn-full btn-orange">Shop at the SuperMarket</button>
+			<button data-bind="click: function(){state(STATES().FARMERSMARKET)}" class="btn-full btn-orange">Shop at the Farmer's Market</button>
+			<button data-bind="click: function(){state(STATES().DRAGDROP)}" class="btn-full btn-green">Start Cooking!</button>
+		</div>
+
+		<div data-bind="visible: state() == STATES().SUPERMARKET">
+			<button data-bind="click: function(){state(STATES().SHOPORCOOK)}" class="btn-full btn-teal">Back</button>
+		</div>
+
+		<div data-bind="visible: state() == STATES().FARMERSMARKET">
+			<button data-bind="click: function(){state(STATES().SHOPORCOOK)}" class="btn-full btn-teal">Back</button>
+		</div>
+
+		<div data-bind="visible: state() == STATES().DRAGDROP">
+			<button data-bind="click: function(){state(STATES().SHOPORCOOK)}" class="btn-full btn-teal">Back</button>
+		</div>
+	</div>
+</body>
+</html>
