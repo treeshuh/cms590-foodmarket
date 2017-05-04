@@ -139,7 +139,7 @@ button {
 .ingredient-div {
 	text-align: center;
 	display: inline-block;
-	max-width: 30%;
+	max-width: 31%;
 	width: 30%;
 	height: 100px;
 	vertical-align: bottom;
@@ -170,4 +170,37 @@ button {
 	top: 50%;
 	left: 50%; 
 	transform: translate(-50%, -90%);
+}
+
+#dragdrop .inventory, #prep-station .inventory {
+	max-height: 150px;
+	overflow: auto;
+}
+
+#stations {
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 10px;
+	border-radius: 3px;
+	overflow: hidden;
+}
+
+#stations tr td{
+	width: 195px;
+	height: 140px;
+	background-color: #888;
+	text-align: center;
+}
+
+#stations tr td img {
+	width: 25px;
+}
+
+#stations tr td button {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+img.unwashed {
+	filter: brightness(50%);
 }

@@ -1,12 +1,13 @@
 $(document).ready(function() {
 // Ingredient class
 // details is one of the INGREDIENT enums
-function Ingredient(details, price, daysToExpiration) {
+function Ingredient(details, price, daysToExpiration, isDirty=true) {
 	this.details = details;
 	this.price = price;
 	this.daysToExpiration = daysToExpiration;
-	this.washed = false;
-	this.isCut = false;
+	this.pending = ko.observable(false);
+	this.washed = ko.observable(!isDirty);
+	this.isCut = ko.observable(false);
 	this.cooked = false;
 
 	this.name = function() {
@@ -14,7 +15,7 @@ function Ingredient(details, price, daysToExpiration) {
 	};
 
 	this.image = function() {
-		if (this.isCut) {
+		if (this.isCut()) {
 			return this.details.cutImageSource;
 		} else {
 			return this.details.imageSource;
@@ -30,15 +31,20 @@ function Ingredient(details, price, daysToExpiration) {
 	};
 
 	this.wash = function() {
-		this.washed = true;
+		this.washed(true);
 	};
 
 	this.cut = function() {
-		this.isCut = true;
+		this.isCut(true);
 	};
 
 	this.cook = function() {
 		this.cooked = true;
+	};
+
+	this.equals = function(other) {
+		return this.details.displayName == other.details.displayName && this.daysToExpiration == other.daysToExpiration
+			&& this.washed == other.washed && this.pending == other.pending && this.isCut == other.isCut && this.cooked == other.cooked;
 	}
 };
 
@@ -56,17 +62,31 @@ function Utensil(name) {
 	}
 }
 
-function Station(type) {
+function Station(type, id) {
+	var me = this;
+	this.id = id;
 	this.type = type;
-	this.inUse = false;
+	this.hasValidMove = ko.observable(false);
+	this.items = ko.observableArray();
+	this.latest = ko.computed({
+		read: function() {
+			return me.items().length ? me.items()[0] : "";
+		}, 
+		write: function(value) {
+			value.pending(true);
+			me.items.push(value);
+		}
+	});
 
-	this.use = function() {
-		this.inUse = true;
-	}
-
-	this.finish = function() {
-		this.inUse = false;
-	}
+	this.hasItem = function(itemToMatch) {
+		var out = false;
+		this.items().forEach(function(item) {
+			if (item.name() == itemToMatch.displayName) {
+				out = true;
+			}
+		});
+		return out;
+	};
 }
  
 var STATIONS = {
@@ -84,7 +104,7 @@ var CUTS = {
 var INGREDIENTS = {
 	BREAD: {displayName: "Bread", imageSource: "images/Bread.png", cutImageSource: "images/BreadPieces.png"},
 	CUCUMBER: {displayName: "Cucumber", imageSource: "images/Cucumber.png", cutImageSource: "images/ChoppedCucumber.png"},
-	TOMATO: {displayName: "Tomato", imageSource: "images/Tomato.png", cutImageSource: "images/ChoppedTomato.png"},
+	TOMATO: {displayName: "Tomato", imageSource: "images/Tomato.png", cutImageSource: "images/ChoppedTomatoes.png"},
 };
 
 var UTENSILS = {
@@ -132,9 +152,15 @@ function Recipe(steps, dependencies, reward) {
 	};
 
 	this.finished = function() {
-		return this.completedSteps.size = this.steps.length;
+		return this.completedSteps.size == this.steps.length;
 	};
 };
+
+var STUPID_RECIPE = new Recipe([
+		new RecipeStep(STATIONS.SINK, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER], [], null), // wash cucumber and tomato
+		new RecipeStep(STATIONS.PREP, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.BREAD], [], CUTS.DICE), // dice cucumber, tomato, and bread
+		new RecipeStep(STATIONS.STOVE, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.BREAD], [], 10)
+	], [[], [0], [1]], ':D');
 
 var STATES = {
 	SHOPORCOOK: 0,
@@ -165,37 +191,163 @@ var GameModel = function() {
 		}
 	});
 	me.money = ko.observable(100);
-	me.inventory = ko.observableArray([new Ingredient(INGREDIENTS.BREAD, 10, 10)]);
+	me.inventory = ko.observableArray([new Ingredient(INGREDIENTS.BREAD, 10, 10, false)]);
 	me.supermarketInventory = ko.observableArray([new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
 												  new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
 												  new Ingredient(INGREDIENTS.TOMATO, 20, 3),
 												  new Ingredient(INGREDIENTS.TOMATO, 20, 3), 
-												  new Ingredient(INGREDIENTS.BREAD, 30, 14)
+												  new Ingredient(INGREDIENTS.BREAD, 30, 14, false)
 												  ]);
 
 	me.countdown = ko.observable();
+	me.leftStove = new Station(STATIONS.STOVE, 1);
+	me.rightStove = new Station(STATIONS.STOVE, 2);
+	me.leftSink = new Station(STATIONS.SINK, 3);
+	me.rightPrep = new Station(STATIONS.PREP, 4);
+	me.allStations = [me.leftStove, me.rightStove, me.leftSink, me.rightPrep];
+
+	me.currentRecipe = STUPID_RECIPE;
+
+	// checks for valid moves
+	me.dropHandler = ko.pureComputed({
+		read: function() {
+			return "hello lol"
+		},
+		write: function(value) {
+			me.allStations.forEach(function(station) {
+				station.hasValidMove(false);
+			});
+			me.currentRecipe.steps.forEach(function(step, stepNum) {
+				if (me.currentRecipe.canStartStep(stepNum)) {
+					me.allStations.forEach(function(station) {
+						if (station.type.displayName == step.station.displayName && station.items().length == step.ingredients.length + step.utensils.length) {
+							var match = true;
+							step.ingredients.concat(step.utensils).forEach(function(item) {
+								if (!station.hasItem(item)) {
+									match = false;
+								}
+							});
+							if (match) {
+								station.hasValidMove(stepNum + 1);
+							}
+						}
+					})
+				}
+			})
+		}
+	});
 
 	me.buyFromSupermarket = function(supermarketIndex) {
 		var ing = me.supermarketInventory.splice(supermarketIndex, 1)[0];
 		me.inventory.push(ing);
 		me.money(me.money()-ing.price);
+	};
 
+	me.returnToFridge = function(ingredient, station, ingredientIndex) {
+		ingredient.pending(false);
+		station.items.splice(ingredientIndex, 1);
+		me.dropHandler(0);
+	};
+
+	// returns the step
+	me.executeStep = function(station) {
+		if (station.hasValidMove()) {
+			var stepNum = station.hasValidMove() - 1;
+			me.currentRecipe.completeStep(stepNum);
+			return me.currentRecipe.steps[stepNum];
+		}
+	};
+
+	// should only be called on ingredients
+	me.executeWash = function(station) {
+		var step = me.executeStep(station);
+		station.items().forEach(function(ing, index) {
+			ing.wash();
+			ing.pending(false);
+		});
+		station.items([]);
+		if (me.currentRecipe.finished()) {
+			window.alert(me.currentRecipe.reward);
+		}
+		me.dropHandler(me.dropHandler() + 1);
+	}
+
+	me.executeCut = function(station) {
+		var step = me.executeStep(station);
+		station.items().forEach(function(ing, index) {
+			ing.cut();
+			ing.pending(false);
+		});
+		station.items([]);
+		if (me.currentRecipe.finished()) {
+			window.alert(me.currentRecipe.reward);
+		}
+		me.dropHandler(me.dropHandler() + 1);	
+		me.state(STATES.DRAGDROP);	
+	}
+
+	me.executeCook = function(station) {
+		var step = me.executeStep(station);
+		station.items().forEach(function(ing, index) {
+			ing.cook();
+			ing.pending(false);
+			for (var i = 0; i < me.inventory().length; i++) {
+				if (ing.equals(me.inventory()[i])) {
+					me.inventory.splice(i, 1);
+					break;
+				}
+			}
+		});
+		station.items([]);
+		if (me.currentRecipe.finished()) {
+			window.alert(me.currentRecipe.reward);
+		}
+		me.dropHandler(me.dropHandler() + 1);
 	}
 }
 
+//http://stackoverflow.com/questions/17473354/knockout-js-countdown-timer
 ko.bindingHandlers.timer = {
-
     update: function (element, valueAccessor) {
-
         // retrieve the value from the span
         var sec = $(element).text();
         var timer = setInterval(function() { 
-
             $(element).text(--sec);
             if (sec == 0) {
                 clearInterval(timer);
             }
         }, 1000);
+    }
+};
+
+//http://jsfiddle.net/wilsonhut/2nj9J/
+var _dragged;
+ko.bindingHandlers.drag = {
+    init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        var dragElement = $(element);
+        var dragOptions = {
+            helper: 'clone',
+            revert: true,
+            revertDuration: 0,
+            start: function() {
+                _dragged = ko.utils.unwrapObservable(valueAccessor().value);
+            },
+            cursor: 'default'
+        };
+        dragElement.draggable(dragOptions).disableSelection();
+    }
+};
+
+ko.bindingHandlers.drop = {
+    init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        var dropElement = $(element);
+        var dropOptions = {
+            drop: function(event, ui) {
+                valueAccessor().value(_dragged);
+            	valueAccessor().root.dropHandler(_dragged);
+            }
+        };
+        dropElement.droppable(dropOptions);
     }
 };
 
