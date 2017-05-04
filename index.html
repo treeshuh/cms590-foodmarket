@@ -11,15 +11,39 @@
 </head>
 <body>
 	<div id="main">
+		<div class="stats">
+			<p>Coins: <span data-bind="text: money"></span></p>
+			<p>Time: <span data-bind="timer: countdown">120</span></p>
+		</div>
 		<h3 data-bind="text: title"></h3>
 
 		<div data-bind="visible: state() == STATES().SHOPORCOOK">
+			<div class="inventory">
+				<h4>IN YOUR FRIDGE:</h4>
+				<div data-bind="foreach: inventory">
+					<div class="ingredient-div">
+						<img data-bind="attr: {src: $data.image()}">
+						<p class="ingredient-name" data-bind="text: $data.name()"></p>
+						<p class="ingredient-expiry" data-bind="text: '(Expires in:' + $data.daysToExpiration + ')'"></p>
+					</div>
+				</div>
+			</div>
 			<button data-bind="click: function(){state(STATES().SUPERMARKET)}" class="btn-full btn-orange">Shop at the SuperMarket</button>
-			<button data-bind="click: function(){state(STATES().FARMERSMARKET)}" class="btn-full btn-orange">Shop at the Farmer's Market</button>
+			<button disabled data-bind="click: function(){state(STATES().FARMERSMARKET)}" class="btn-full btn-orange">Shop at the Farmer's Market</button>
 			<button data-bind="click: function(){state(STATES().DRAGDROP)}" class="btn-full btn-green">Start Cooking!</button>
 		</div>
 
 		<div data-bind="visible: state() == STATES().SUPERMARKET">
+			<div class="inventory" id="supermarket-inventory">
+				<h4>AVAILABLE FOR PURCHASE:</h4>
+				<div data-bind="foreach: supermarketInventory">
+					<div class="ingredient-div" data-bind="click: function(){$root.buyFromSupermarket($index())}">
+						<img data-bind="attr: {src: $data.image()}">
+						<p class="ingredient-name" data-bind="text: $data.name()"></p>
+						<p class="ingredient-price" data-bind="text: $data.price + ' coins'"></p>
+					</div>
+				</div>
+			</div>
 			<button data-bind="click: function(){state(STATES().SHOPORCOOK)}" class="btn-full btn-teal">Back</button>
 		</div>
 

@@ -27,6 +27,7 @@ body {
 h3 {
 	font-family: 'Permanent Marker', serif;
 	text-align: center;
+	color: rgba(57, 57, 58, 1);
 }
 
 button {
@@ -57,6 +58,116 @@ button {
 	cursor: pointer;
 }
 
+.btn-orange:disabled, .btn-green:disabled, .btn-teal:disabled {
+	background-color: #aaa;
+}
+
+.btn-orange:hover:disabled, .btn-green:hover:disabled, .btn-teal:hover:disabled {
+	cursor: inherit;
+}
+
 .btn-full {
 	width: 100%;
+}
+
+.stats {
+	padding: 0px 10px;
+	/*background-color: rgba(41, 115, 115, 1);*/
+	background-color: rgba(57, 57, 58, 1);
+	border-radius: 3px;
+	color: white;
+	font-weight: 700;
+}
+
+.stats p {
+	padding: 0;
+	margin: 0;
+	width: 48%;
+	display: inline-block;
+}
+
+.stats p:first-child {
+	text-align: left;
+}
+
+.stats p:last-child {
+	text-align: right;
+}
+
+.inventory {
+	max-width: 100%;
+	overflow: auto;
+	background-color: #dddddd;
+	padding: 10px;
+	border-radius: 3px;
+}
+
+.inventory h4{
+	margin: 10px 0;
+}
+
+#supermarket-inventory .ingredient-div {
+	background-color: #aaa;
+	padding: 3px;
+	border-radius: 6px;
+	margin-bottom: 5px;
+}
+
+#supermarket-inventory .ingredient-div:hover {
+	cursor: pointer;
+	background-color: rgba(190, 238, 98, 1);
+}
+
+#supermarket-inventory .ingredient-div:hover p {
+	color: rgba(57, 57, 58, 1);
+}	
+
+#supermarket-inventory .ingredient-div p {
+	color: rgba(230, 230, 230, 1);
+}
+
+.ingredient-div p.ingredient-price {
+	bottom: 10px;
+	font-size: x-small;
+}
+
+ .ingredient-div p.ingredient-expiry {
+ 	bottom: 10px;
+ 	font-size: xx-small;
+ }
+
+.ingredient-div {
+	text-align: center;
+	display: inline-block;
+	max-width: 30%;
+	width: 30%;
+	height: 100px;
+	vertical-align: bottom;
+	position: relative;
+}
+
+.ingredient-div p {
+	margin: 0;
+	color: #999;
+	position: absolute;
+	bottom: 20px;
+	left: 50%;
+	transform: translate(-50%, 0);
+}
+
+.ingredient-div .ingredient-name {
+	font-size: small;
+}
+
+.ingredient-div .ingredient-expiry {
+	font-size: x-small;
+}
+
+.ingredient-div img {
+	width: 50px;
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	left: 50%; 
+	transform: translate(-50%, -90%);
 }

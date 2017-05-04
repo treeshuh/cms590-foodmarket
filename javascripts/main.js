@@ -1,12 +1,25 @@
 $(document).ready(function() {
 // Ingredient class
-function Ingredient(name, price, daysToExpiration) {
-	this.name = name;
+// details is one of the INGREDIENT enums
+function Ingredient(details, price, daysToExpiration) {
+	this.details = details;
 	this.price = price;
 	this.daysToExpiration = daysToExpiration;
 	this.washed = false;
-	this.cut = false;
+	this.isCut = false;
 	this.cooked = false;
+
+	this.name = function() {
+		return this.details.displayName;
+	};
+
+	this.image = function() {
+		if (this.isCut) {
+			return this.details.cutImageSource;
+		} else {
+			return this.details.imageSource;
+		}
+	}
 
 	this.isExpired = function() {
 		return this.daysToExpiration <= 0;
@@ -21,7 +34,7 @@ function Ingredient(name, price, daysToExpiration) {
 	};
 
 	this.cut = function() {
-		this.cut = true;
+		this.isCut = true;
 	};
 
 	this.cook = function() {
@@ -69,8 +82,9 @@ var CUTS = {
 };
 
 var INGREDIENTS = {
-	EGGPLANT: {displayName: "Eggplant", imageSource: "images/eggplant.png"},
-	TOMATO: {displayName: "Tomato", imageSource: "images/tomato.png"},
+	BREAD: {displayName: "Bread", imageSource: "images/Bread.png", cutImageSource: "images/BreadPieces.png"},
+	CUCUMBER: {displayName: "Cucumber", imageSource: "images/Cucumber.png", cutImageSource: "images/ChoppedCucumber.png"},
+	TOMATO: {displayName: "Tomato", imageSource: "images/Tomato.png", cutImageSource: "images/ChoppedTomato.png"},
 };
 
 var UTENSILS = {
@@ -137,7 +151,7 @@ var GameModel = function() {
 	me.title = ko.pureComputed(function() {
 		switch(me.state()) {
 			case STATES.SHOPORCOOK:
-				return "Choose to Shop or Cook!";
+				return "What do you want to do?";
 			case STATES.DRAGDROP: 
 				return "Kitchen";
 			case STATES.CUTTINGBOARD:
@@ -149,8 +163,41 @@ var GameModel = function() {
 			default:
 				return ""
 		}
-	})
+	});
+	me.money = ko.observable(100);
+	me.inventory = ko.observableArray([new Ingredient(INGREDIENTS.BREAD, 10, 10)]);
+	me.supermarketInventory = ko.observableArray([new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
+												  new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
+												  new Ingredient(INGREDIENTS.TOMATO, 20, 3),
+												  new Ingredient(INGREDIENTS.TOMATO, 20, 3), 
+												  new Ingredient(INGREDIENTS.BREAD, 30, 14)
+												  ]);
+
+	me.countdown = ko.observable();
+
+	me.buyFromSupermarket = function(supermarketIndex) {
+		var ing = me.supermarketInventory.splice(supermarketIndex, 1)[0];
+		me.inventory.push(ing);
+		me.money(me.money()-ing.price);
+
+	}
 }
+
+ko.bindingHandlers.timer = {
+
+    update: function (element, valueAccessor) {
+
+        // retrieve the value from the span
+        var sec = $(element).text();
+        var timer = setInterval(function() { 
+
+            $(element).text(--sec);
+            if (sec == 0) {
+                clearInterval(timer);
+            }
+        }, 1000);
+    }
+};
 
 ko.applyBindings(new GameModel());
 
