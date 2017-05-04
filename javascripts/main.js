@@ -329,7 +329,8 @@ ko.bindingHandlers.drag = {
             helper: 'clone',
             revert: true,
             revertDuration: 0,
-            cursorAt: {left: 150, top: 20},
+            cursorAt: {left: 200, top: 20},
+            cursor: 'none',
             start: function() {
                 _dragged = ko.utils.unwrapObservable(valueAccessor().value);
             },
