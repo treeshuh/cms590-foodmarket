@@ -82,9 +82,14 @@
 					<!-- /ko -->
 					<!-- ko with: rightStove -->
 					<td id="right-stove" data-bind="drop: {value: latest, root: $root}">
-						<div class="progress-bar">
+						<div class="progress-bar" data-bind="verticalProgressBar: {current: $root.cookTimerRight, goal: $root.currentRightStoveGoal, id: 'RIGHT'}">
 						</div>
-						<button class="btn-green" data-bind="enable: hasValidMove, click: $root.executeCook.bind($root, $data)">cook</button>
+						<div data-bind="visible: !active()">
+							<button class="btn-green" data-bind="enable: hasValidMove, click: function(){$data.active(true)}">cook</button>
+						</div>
+						<div data-bind="visible: active()">
+							<button class="btn" data-bind="click: $root.executeCook.bind($data, $data, $element)">end cook</button>
+						</div>
 						<div data-bind="foreach: items">
 							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index)">
 						</div>

@@ -229,6 +229,16 @@ var GameModel = function() {
 		}
 	});
 
+	me.currentRightStoveGoal = ko.pureComputed({
+		read: function() {
+			if (me.rightStove.hasValidMove() && me.rightStove.active()) {
+				return me.currentRecipe.steps[me.rightStove.hasValidMove()-1].goal;	
+			} else {
+				return null;
+			}
+		}
+	});
+
 	me.currentCutStep = ko.pureComputed({
 		read: function() {
 			if (me.rightPrep.hasValidMove()) {
@@ -383,8 +393,12 @@ var GameModel = function() {
 	}
 
 	me.executeCook = function(station, element) {
-		if ($(element).hasClass("over")) {
+		var progressElement = $($(element).closest("td")).find(".progress-bar");
+		if (progressElement.hasClass("over")) {
 			window.alert("looks like you burned your food :( we'll let you pass this time!");
+		} else if (progressElement.hasClass("pending")) {
+			window.alert("looks like you're not quite done cooking. please wait some more :)");
+			return;
 		}
 
 		var step = me.executeStep(station);
