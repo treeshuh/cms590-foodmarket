@@ -15,13 +15,23 @@ body {
 #main {
 	background-color: rgba(230, 230, 230, 1);
 	width: 400px;
-	height: 600px;	
+	min-height: 600px;
 	max-width: 80vw;
 	max-height: 80vh;
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 30px;
 	padding: 15px;
+	overflow: auto;
+}
+
+::-webkit-scrollbar { 
+	width: 3px;
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #aaa;
 }
 
 h3 {
@@ -82,7 +92,7 @@ button {
 .stats p {
 	padding: 0;
 	margin: 0;
-	width: 48%;
+	width: 185px;
 	display: inline-block;
 }
 
@@ -140,8 +150,8 @@ button {
 	text-align: center;
 	display: inline-block;
 	max-width: 31%;
-	width: 30%;
-	height: 100px;
+	width: 117px;
+	height: 117px;
 	vertical-align: bottom;
 	position: relative;
 }
