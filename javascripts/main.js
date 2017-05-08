@@ -67,6 +67,7 @@ function Station(type, id) {
 	this.id = id;
 	this.type = type;
 	this.hasValidMove = ko.observable(false);
+	this.active = ko.observable(false);
 	this.items = ko.observableArray();
 	this.latest = ko.computed({
 		read: function() {
@@ -129,8 +130,10 @@ function RecipeStep(station, ingredients, utensils, goal) {
 // dependencies is an array of arrays that denote dependencies
 //		for example, [[], [0]] means the second step depends on the first
 // 
-function Recipe(steps, dependencies, reward) {
+function Recipe(name, steps, dependencies, reward, image) {
+	this.name = name;
 	this.steps = steps;
+	this.image = image;
 	this.dependencies = dependencies;
 	this.reward = reward;
 	this.completedSteps = new Set();
@@ -156,11 +159,11 @@ function Recipe(steps, dependencies, reward) {
 	};
 };
 
-var STUPID_RECIPE = new Recipe([
+var STUPID_RECIPE = new Recipe("Panzanella",
 		//new RecipeStep(STATIONS.SINK, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER], [], null), // wash cucumber and tomato
-		new RecipeStep(STATIONS.PREP, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.BREAD], [], CUTS.DICE), // dice cucumber, tomato, and bread
-		new RecipeStep(STATIONS.STOVE, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.BREAD], [], 10)
-	], [[], [0], [1]], ':D');
+		//new RecipeStep(STATIONS.PREP, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.BREAD], [], CUTS.DICE), // dice cucumber, tomato, and bread
+		[new RecipeStep(STATIONS.STOVE, [INGREDIENTS.BREAD], [], 10)
+	], [[]], ':D', "images/Panzanella.png");
 
 var STATES = {
 	SHOPORCOOK: 0,
@@ -201,6 +204,8 @@ var GameModel = function() {
 												  ]);
 
 	me.countdown = ko.observable();
+	me.cookTimerLeft = ko.observable(0); //count up timer
+	me.cookTimerRight = ko.observable(0); //count up timer
 	me.leftStove = new Station(STATIONS.STOVE, 1);
 	me.rightStove = new Station(STATIONS.STOVE, 2);
 	me.leftSink = new Station(STATIONS.SINK, 3);
@@ -208,10 +213,21 @@ var GameModel = function() {
 	me.allStations = [me.leftStove, me.rightStove, me.leftSink, me.rightPrep];
 
 	me.currentRecipe = STUPID_RECIPE;
+	me.finishedRecipes = ko.observableArray([]);
 
 	me.horzCuts = ko.observableArray([]);
 	me.vertCuts = ko.observableArray([]);
 	me.cutIndex = ko.observable(0);
+
+	me.currentLeftStoveGoal = ko.pureComputed({
+		read: function() {
+			if (me.leftStove.hasValidMove() && me.leftStove.active()) {
+				return me.currentRecipe.steps[me.leftStove.hasValidMove()-1].goal;	
+			} else {
+				return null;
+			}
+		}
+	});
 
 	me.currentCutStep = ko.pureComputed({
 		read: function() {
@@ -221,7 +237,7 @@ var GameModel = function() {
 				return null;
 			}
 		}
-	})
+	});
 
 	me.currentChop = ko.pureComputed({
 		read: function() {
@@ -366,7 +382,11 @@ var GameModel = function() {
 		me.state(STATES.DRAGDROP);	
 	}
 
-	me.executeCook = function(station) {
+	me.executeCook = function(station, element) {
+		if ($(element).hasClass("over")) {
+			window.alert("looks like you burned your food :( we'll let you pass this time!");
+		}
+
 		var step = me.executeStep(station);
 		station.items().forEach(function(ing, index) {
 			ing.cook();
@@ -381,6 +401,8 @@ var GameModel = function() {
 		station.items([]);
 		if (me.currentRecipe.finished()) {
 			window.alert(me.currentRecipe.reward);
+			me.finishedRecipes.push(me.currentRecipe);
+			me.state(me.STATES().SHOPORCOOK)
 		}
 		me.dropHandler(me.dropHandler() + 1);
 	}
@@ -393,12 +415,36 @@ ko.bindingHandlers.timer = {
         var sec = $(element).text();
         var timer = setInterval(function() { 
             $(element).text(--sec);
-            if (sec == 0) {
+            if (sec <= 0) {
                 clearInterval(timer);
             }
         }, 1000);
     }
 };
+
+var _TIMING_BUFFER = 2.5;
+var _timers = {LEFT: null, RIGHT: null};
+ko.bindingHandlers.verticalProgressBar = {
+	update: function (element, valueAccessor) {
+		var values = ko.unwrap(valueAccessor());
+		if (values.goal() && !_timers[values.id]) {
+			_timers[values.id] = setInterval(function() {
+				if (values.current() > values.goal() + _TIMING_BUFFER) {
+					clearInterval(_timers[values.id]);
+					$(element).removeClass("ready");
+					$(element).addClass("over");
+				} else if (values.current() < values.goal() - _TIMING_BUFFER) {
+					$(element).addClass("pending");
+				} else {
+					$(element).addClass("ready");
+					$(element).removeClass("pending");
+				}
+				values.current(values.current() + 0.1);
+				$(element).animate({height: String(Math.min(140, values.current()/values.goal()*140)) + "px"});
+			}, 500);
+		}
+	}
+}
 
 //http://jsfiddle.net/wilsonhut/2nj9J/
 var _dragged;

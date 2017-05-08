@@ -30,6 +30,15 @@
 					</div>
 				</div>
 			</div>
+			<div class="inventory" data-bind="if: finishedRecipes().length ">
+				<h4>FINISHED RECIPES:</h4>
+				<div data-bind="foreach: finishedRecipes">
+					<div class="ingredient-div">
+						<img data-bind="attr: {src: $data.image}">
+						<p class="ingredient-name" data-bind="text: $data.name"></p>
+					</div>
+				</div>
+			</div>
 			<button data-bind="click: function(){state(STATES().SUPERMARKET)}" class="btn-full btn-orange">Shop at the SuperMarket</button>
 			<button disabled data-bind="click: function(){state(STATES().FARMERSMARKET)}" class="btn-full btn-orange">Shop at the Farmer's Market</button>
 			<button data-bind="click: function(){state(STATES().DRAGDROP)}" class="btn-full btn-green">Start Cooking!</button>
@@ -58,7 +67,14 @@
 				<tr>
 					<!-- ko with: leftStove -->
 					<td id="left-stove" data-bind="drop: {value: latest, root: $root}">
-						<button class="btn-green" data-bind="enable: hasValidMove, click: $root.executeCook.bind($root, $data)">cook (wizard)</button>
+						<div class="progress-bar" data-bind="verticalProgressBar: {current: $root.cookTimerLeft, goal: $root.currentLeftStoveGoal, id: 'LEFT'}">
+						</div>
+						<div data-bind="visible: !active()">
+							<button class="btn-green" data-bind="enable: hasValidMove, click: function(){$data.active(true)}">cook</button>
+						</div>
+						<div data-bind="visible: active()">
+							<button class="btn" data-bind="click: $root.executeCook.bind($data, $data, $element)">end cook</button>
+						</div>
 						<div data-bind="foreach: items">
 							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index)">
 						</div>
@@ -66,7 +82,9 @@
 					<!-- /ko -->
 					<!-- ko with: rightStove -->
 					<td id="right-stove" data-bind="drop: {value: latest, root: $root}">
-						<button class="btn-green" data-bind="enable: hasValidMove, click: $root.executeCook.bind($root, $data)">cook (wizard)</button>
+						<div class="progress-bar">
+						</div>
+						<button class="btn-green" data-bind="enable: hasValidMove, click: $root.executeCook.bind($root, $data)">cook</button>
 						<div data-bind="foreach: items">
 							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index)">
 						</div>

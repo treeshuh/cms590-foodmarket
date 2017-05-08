@@ -204,15 +204,41 @@ button {
 	height: 140px;
 	background-color: #888;
 	text-align: center;
+	position: relative;
 }
 
 #stations tr td img {
 	width: 25px;
 }
 
+#stations tr td img, #stations tr td button {
+	z-index: 10;
+	position: relative;
+}
+
 #stations tr td button {
 	margin-left: auto;
 	margin-right: auto;
+}
+
+.progress-bar {
+	position: absolute;
+	width: 195px;
+	height: 1px;
+	bottom: 0;
+	pointer-events: none;
+}
+
+.progress-bar.pending {
+	background-color: rgba(255, 133, 82, 0.5);
+}
+
+.progress-bar.ready {
+	background-color: rgba(190, 238, 98, 0.5);
+}
+
+.progress-bar.over {
+	background-color: rgba(0,0,0,0.5);
 }
 
 img.unwashed {
