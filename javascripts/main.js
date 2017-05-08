@@ -1,7 +1,7 @@
 $(document).ready(function() {
 // Ingredient class
 // details is one of the INGREDIENT enums
-function Ingredient(details, price, daysToExpiration, isDirty=true) {
+function Ingredient(details, price, daysToExpiration, isDirty=false) {
 	this.details = details;
 	this.price = price;
 	this.daysToExpiration = daysToExpiration;
@@ -93,12 +93,13 @@ function Station(type, id) {
 var STATIONS = {
 	STOVE : {id: 0, displayName:  "stove"},
 	PREP : {id: 1, displayName: "prep station"},
-	SINK: {id: 2, displayName: "sink"}
+	SINK: {id: 2, displayName: "sink"},
+	PLATING: {id: 3, displayName: "plating"}
 };
 
 var CUTS = {
 	SLICE : {id: 'SLICE', displayName: "slice" },
-	MINCE : {id: 'MINCE', displayName: "mince"},
+	MINCE : {id: 'MINCE', displayName: "mince", horzCuts: [50, 70, 90, 110, 130], vertCuts: [40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240]},
 	DICE: {id: 'DICE', displayName: "dice", horzCuts: [50, 90, 130], vertCuts: [40, 80, 120, 160, 200, 240]}
 };
 
@@ -106,6 +107,11 @@ var INGREDIENTS = {
 	BREAD: {displayName: "Bread", imageSource: "images/Bread.png", cutImageSource: "images/BreadPieces.png"},
 	CUCUMBER: {displayName: "Cucumber", imageSource: "images/Cucumber.png", cutImageSource: "images/ChoppedCucumber.png"},
 	TOMATO: {displayName: "Tomato", imageSource: "images/Tomato.png", cutImageSource: "images/ChoppedTomatoes.png"},
+	JALAPENO: {displayName: "Jalapeno", imageSource: "images/Jalapeno.png", cutImageSource: "images/ChoppedCelery.png"}, //TODO: need jalapenos
+	LIME: {displayName: "Lime", imageSource: "images/Lemon.png", cutImageSource: "images/HalfLemon.png"}, //TODO: color these
+	OLIVE_OIL: {displayName: "Olive Oil", imageSource: "images/OliveOil.png"},
+	SALT: {displayName: "Salt", imageSource: "images/Salt.png"},
+	PEPPER: {displayName: "Pepper", imageSource: "images/Pepper.png"}
 };
 
 var UTENSILS = {
@@ -139,6 +145,9 @@ function Recipe(name, steps, dependencies, reward, image) {
 	this.completedSteps = new Set();
 
 	this.canStartStep = function(stepNum) {
+		if (this.completedSteps.has(stepNum)) {
+			return false; //already done
+		}
 		var d = this.dependencies[stepNum];
 		for (var i = 0; i < d.length; i++) {
 			if (!this.completedSteps.has(d[i])) {
@@ -164,6 +173,31 @@ var STUPID_RECIPE = new Recipe("Panzanella",
 		//new RecipeStep(STATIONS.PREP, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.BREAD], [], CUTS.DICE), // dice cucumber, tomato, and bread
 		[new RecipeStep(STATIONS.STOVE, [INGREDIENTS.BREAD], [], 10)
 	], [[]], ':D', "images/Panzanella.png");
+
+var PANZANELLA = new Recipe("Panzanella", 
+	[
+		new RecipeStep(STATIONS.PREP, [INGREDIENTS.TOMATO, INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.CUCUMBER], [], CUTS.DICE),
+		new RecipeStep(STATIONS.PREP, [INGREDIENTS.JALAPENO], [], CUTS.MINCE),
+		new RecipeStep(STATIONS.PLATING, [INGREDIENTS.TOMATO, INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.CUCUMBER, INGREDIENTS.SALT, INGREDIENTS.PEPPER], [], null),
+		new RecipeStep(STATIONS.STOVE, [INGREDIENTS.JALAPENO, INGREDIENTS.OLIVE_OIL], [], 10),
+		new RecipeStep(STATIONS.STOVE, [INGREDIENTS.JALAPENO, INGREDIENTS.LIME, INGREDIENTS.OLIVE_OIL, INGREDIENTS.SALT, INGREDIENTS.PEPPER], [], 3),
+		new RecipeStep(STATIONS.PREP, [INGREDIENTS.BREAD], [], CUTS.DICE),
+		new RecipeStep(STATIONS.STOVE, [INGREDIENTS.BREAD], [], 5),
+		new RecipeStep(STATIONS.PLATING, [INGREDIENTS.BREAD, INGREDIENTS.TOMATO, INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.CUCUMBER, INGREDIENTS.JALAPENO,
+				INGREDIENTS.SALT, INGREDIENTS.PEPPER], [], null)
+	],
+	[
+		[], 
+		[],
+		[0],
+		[1],
+		[3],
+		[],
+		[5],
+		[2,4,6]
+	],
+	'Good job, you finished Panzanella!',
+	"images/Panzanella.png");
 
 var STATES = {
 	SHOPORCOOK: 0,
@@ -195,24 +229,39 @@ var GameModel = function() {
 		}
 	});
 	me.money = ko.observable(100);
-	me.inventory = ko.observableArray([new Ingredient(INGREDIENTS.BREAD, 10, 10, false), new Ingredient(INGREDIENTS.CUCUMBER, 10, 7, false), new Ingredient(INGREDIENTS.TOMATO, 20, 3, false)]);
+	var OLD_LIME = new Ingredient(INGREDIENTS.LIME, 5, 2, false);
+	OLD_LIME.cut();
+	var OLD_BREAD = new Ingredient(INGREDIENTS.BREAD, 10, 10, false);
+	//OLD_BREAD.cut();
+	me.inventory = ko.observableArray([OLD_BREAD,
+									   OLD_LIME,
+									   new Ingredient(INGREDIENTS.SALT, 1, 100),
+									   new Ingredient(INGREDIENTS.PEPPER, 1, 100),
+									   new Ingredient(INGREDIENTS.OLIVE_OIL, 50, 100)
+									   ]);
 	me.supermarketInventory = ko.observableArray([new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
 												  new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
+												  new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
+												  new Ingredient(INGREDIENTS.TOMATO, 20, 3),
 												  new Ingredient(INGREDIENTS.TOMATO, 20, 3),
 												  new Ingredient(INGREDIENTS.TOMATO, 20, 3), 
-												  new Ingredient(INGREDIENTS.BREAD, 30, 14, false)
+												  new Ingredient(INGREDIENTS.BREAD, 30, 14, false),
+												  new Ingredient(INGREDIENTS.JALAPENO, 5, 7),
+												  new Ingredient(INGREDIENTS.JALAPENO, 5, 7),
+									   			  new Ingredient(INGREDIENTS.OLIVE_OIL, 50, 100)
 												  ]);
+
 
 	me.countdown = ko.observable();
 	me.cookTimerLeft = ko.observable(0); //count up timer
 	me.cookTimerRight = ko.observable(0); //count up timer
 	me.leftStove = new Station(STATIONS.STOVE, 1);
 	me.rightStove = new Station(STATIONS.STOVE, 2);
-	me.leftSink = new Station(STATIONS.SINK, 3);
+	me.leftPlate = new Station(STATIONS.PLATING, 3);
 	me.rightPrep = new Station(STATIONS.PREP, 4);
-	me.allStations = [me.leftStove, me.rightStove, me.leftSink, me.rightPrep];
+	me.allStations = [me.leftStove, me.rightStove, me.leftPlate, me.rightPrep];
 
-	me.currentRecipe = STUPID_RECIPE;
+	me.currentRecipe = PANZANELLA;
 	me.finishedRecipes = ko.observableArray([]);
 
 	me.horzCuts = ko.observableArray([]);
@@ -251,7 +300,7 @@ var GameModel = function() {
 
 	me.currentChop = ko.pureComputed({
 		read: function() {
-			if (me.rightPrep.items().length > 0) {
+			if (me.currentCutStep()) {
 				return me.rightPrep.items()[me.cutIndex()];
 			} else {
 				return null;
@@ -320,9 +369,9 @@ var GameModel = function() {
 			return "hello lol"
 		},
 		write: function(value) {
-			me.allStations.forEach(function(station) {
+/*			me.allStations.forEach(function(station) {
 				station.hasValidMove(false);
-			});
+			});*/
 			me.currentRecipe.steps.forEach(function(step, stepNum) {
 				if (me.currentRecipe.canStartStep(stepNum)) {
 					me.allStations.forEach(function(station) {
@@ -360,9 +409,22 @@ var GameModel = function() {
 		if (station.hasValidMove()) {
 			var stepNum = station.hasValidMove() - 1;
 			me.currentRecipe.completeStep(stepNum);
+			station.hasValidMove(false);
 			return me.currentRecipe.steps[stepNum];
 		}
 	};
+
+	me.executePlate = function(station) {
+		var step = me.executeStep(station);
+		/*station.items().forEach(function(ing, index) {
+			ing.pending(false);
+		});
+		station.items([]);*/
+		if (me.currentRecipe.finished()) {
+			me.completeRecipe(station);
+		}
+		me.dropHandler(me.dropHandler() + 1);
+	}
 
 	// should only be called on ingredients
 	me.executeWash = function(station) {
@@ -373,7 +435,7 @@ var GameModel = function() {
 		});
 		station.items([]);
 		if (me.currentRecipe.finished()) {
-			window.alert(me.currentRecipe.reward);
+			me.completeRecipe(station);
 		}
 		me.dropHandler(me.dropHandler() + 1);
 	}
@@ -386,13 +448,13 @@ var GameModel = function() {
 		});
 		station.items([]);
 		if (me.currentRecipe.finished()) {
-			window.alert(me.currentRecipe.reward);
+			me.completeRecipe(station);
 		}
 		me.dropHandler(me.dropHandler() + 1);	
 		me.state(STATES.DRAGDROP);	
 	}
 
-	me.executeCook = function(station, element) {
+	me.executeCook = function(station, element, timer) {
 		var progressElement = $($(element).closest("td")).find(".progress-bar");
 		if (progressElement.hasClass("over")) {
 			window.alert("looks like you burned your food :( we'll let you pass this time!");
@@ -400,25 +462,34 @@ var GameModel = function() {
 			window.alert("looks like you're not quite done cooking. please wait some more :)");
 			return;
 		}
-
 		var step = me.executeStep(station);
 		station.items().forEach(function(ing, index) {
 			ing.cook();
 			ing.pending(false);
+		});
+		station.items([]);
+		if (me.currentRecipe.finished()) {
+			me.completeRecipe(station);
+		}
+		timer(0);
+		station.active(false);
+		me.dropHandler(me.dropHandler() + 1);
+	}
+
+	me.completeRecipe = function(lastStation) {
+		window.alert(me.currentRecipe.reward);
+		me.finishedRecipes.push(me.currentRecipe);
+
+		lastStation.items().forEach(function(ing, index) {
 			for (var i = 0; i < me.inventory().length; i++) {
 				if (ing.equals(me.inventory()[i])) {
 					me.inventory.splice(i, 1);
 					break;
 				}
-			}
+			}			
 		});
-		station.items([]);
-		if (me.currentRecipe.finished()) {
-			window.alert(me.currentRecipe.reward);
-			me.finishedRecipes.push(me.currentRecipe);
-			me.state(me.STATES().SHOPORCOOK)
-		}
-		me.dropHandler(me.dropHandler() + 1);
+		me.state(me.STATES().SHOPORCOOK)
+
 	}
 }
 
@@ -441,6 +512,12 @@ var _timers = {LEFT: null, RIGHT: null};
 ko.bindingHandlers.verticalProgressBar = {
 	update: function (element, valueAccessor) {
 		var values = ko.unwrap(valueAccessor());
+		if (!values.goal() && _timers[values.id]) {
+			clearInterval(_timers[values.id]);
+			$(element).removeClass("ready");
+			$(element).removeClass("over");
+			$(element).removeClass("pending");
+		}
 		if (values.goal() && !_timers[values.id]) {
 			_timers[values.id] = setInterval(function() {
 				if (values.current() > values.goal() + _TIMING_BUFFER) {

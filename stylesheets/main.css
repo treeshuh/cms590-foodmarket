@@ -150,8 +150,8 @@ button {
 	text-align: center;
 	display: inline-block;
 	max-width: 31%;
-	width: 117px;
-	height: 117px;
+	width: 115px;
+	height: 115px;
 	vertical-align: bottom;
 	position: relative;
 }
@@ -175,6 +175,7 @@ button {
 
 .ingredient-div img {
 	width: 50px;
+	max-height: 50px;
 	margin: 0;
 	position: absolute;
 	top: 50%;

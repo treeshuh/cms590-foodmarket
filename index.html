@@ -15,7 +15,7 @@
 	<div id="main">
 		<div class="stats">
 			<p>Coins: <span data-bind="text: money"></span></p>
-			<p>Time: <span data-bind="timer: countdown">120</span></p>
+			<p>Time: <span data-bind="timer: countdown">420</span></p>
 		</div>
 		<h3 data-bind="text: title"></h3>
 
@@ -73,10 +73,10 @@
 							<button class="btn-green" data-bind="enable: hasValidMove, click: function(){$data.active(true)}">cook</button>
 						</div>
 						<div data-bind="visible: active()">
-							<button class="btn" data-bind="click: $root.executeCook.bind($data, $data, $element)">end cook</button>
+							<button class="btn" data-bind="click: $root.executeCook.bind($data, $data, $element, $root.cookTimerLeft)">end cook</button>
 						</div>
 						<div data-bind="foreach: items">
-							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index)">
+							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index())">
 						</div>
 					</td>
 					<!-- /ko -->
@@ -88,28 +88,28 @@
 							<button class="btn-green" data-bind="enable: hasValidMove, click: function(){$data.active(true)}">cook</button>
 						</div>
 						<div data-bind="visible: active()">
-							<button class="btn" data-bind="click: $root.executeCook.bind($data, $data, $element)">end cook</button>
+							<button class="btn" data-bind="click: $root.executeCook.bind($data, $data, $element, $root.cookTimerRight)">end cook</button>
 						</div>
 						<div data-bind="foreach: items">
-							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index)">
+							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index())">
 						</div>
 					</td>
 					<!-- /ko -->
 				</tr>
 				<tr>
-					<!-- ko with: leftSink -->
+					<!-- ko with: leftPlate -->
 					<td id="left-sink" data-bind="drop: {value: latest, root: $root}">
-						<button class="btn-green" data-bind="enable: hasValidMove, click: $root.executeWash.bind($root, $data)">wash</button>
+						<button class="btn-green" data-bind="enable: hasValidMove, click: $root.executePlate.bind($root, $data)">plate/toss</button>
 						<div data-bind="foreach: items">
-							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index)">
+							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index())">
 						</div>
 					</td>
 					<!-- /ko -->
 					<!-- ko with: rightPrep -->
 					<td id="right-prep" data-bind="drop: {value: latest, root: $root}">
-						<button class="btn-green" data-bind="enable: hasValidMove, click: function(){$root.state($root.STATES().CUTTINGBOARD);}">cut</button>
+						<button class="btn-green" data-bind="enable: hasValidMove, click: function(){$root.state($root.STATES().CUTTINGBOARD); $root.cutIndex(0);}">cut</button>
 						<div data-bind="foreach: items">
-							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index)">
+							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index())">
 						</div>
 					</td>
 					<!-- /ko -->
@@ -137,13 +137,25 @@
 					</div>
 				</div>
 			</div>
-			<div data-bind="if: $root.currentChop">
-				<div id="diceGrid" class="cutGrid" data-bind="if: $root.currentCutType() == $root.CUTS().DICE.id">
-					<div data-bind="foreach: $root.CUTS().DICE.horzCuts">
-						<div class="horizontal-cut cutgridline" data-bind="style: {marginTop: $data ? $data + 'px' : 0}, click: $root.registerHorzCut, visible: $root.showHorzCut($data)"></div>
+			<div data-bind="if: $root.currentChop()">
+				<div data-bind="if: $root.currentCutType() == $root.CUTS().DICE.id">
+					<div id="diceGrid" class="cutGrid">
+						<div data-bind="foreach: $root.CUTS().DICE.horzCuts">
+							<div class="horizontal-cut cutgridline" data-bind="style: {marginTop: $data ? $data + 'px' : 0}, click: $root.registerHorzCut, visible: $root.showHorzCut($data)"></div>
+						</div>
+						<div data-bind="foreach: $root.CUTS().DICE.vertCuts">
+							<div class="vertical-cut cutgridline" data-bind="style: {marginLeft: $data  ? $data+ 'px' : 0}, click: $root.registerVertCut, visible: $root.showVertCut($data)"></div>
+						</div>
 					</div>
-					<div data-bind="foreach: $root.CUTS().DICE.vertCuts">
-						<div class="vertical-cut cutgridline" data-bind="style: {marginLeft: $data  ? $data+ 'px' : 0}, click: $root.registerVertCut, visible: $root.showVertCut($data)"></div>
+				</div>
+				<div data-bind="if: $root.currentCutType() == $root.CUTS().MINCE.id">
+					<div id="minceGrid" class="cutGrid">
+						<div data-bind="foreach: $root.CUTS().MINCE.horzCuts">
+							<div class="horizontal-cut cutgridline" data-bind="style: {marginTop: $data ? $data + 'px' : 0}, click: $root.registerHorzCut, visible: $root.showHorzCut($data)"></div>
+						</div>
+						<div data-bind="foreach: $root.CUTS().MINCE.vertCuts">
+							<div class="vertical-cut cutgridline" data-bind="style: {marginLeft: $data  ? $data+ 'px' : 0}, click: $root.registerVertCut, visible: $root.showVertCut($data)"></div>
+						</div>
 					</div>
 				</div>
 				<div id="cuttingboard" data-bind="with: $root.currentChop">
