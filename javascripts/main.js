@@ -96,9 +96,9 @@ var STATIONS = {
 };
 
 var CUTS = {
-	SLICE : {id: 0, displayName: "slice"},
-	MINCE : {id: 1, displayName: "mince"},
-	DICE: {id: 2, displayName: "dice"}
+	SLICE : {id: 'SLICE', displayName: "slice" },
+	MINCE : {id: 'MINCE', displayName: "mince"},
+	DICE: {id: 'DICE', displayName: "dice", horzCuts: [50, 90, 130], vertCuts: [40, 80, 120, 160, 200, 240]}
 };
 
 var INGREDIENTS = {
@@ -157,7 +157,7 @@ function Recipe(steps, dependencies, reward) {
 };
 
 var STUPID_RECIPE = new Recipe([
-		new RecipeStep(STATIONS.SINK, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER], [], null), // wash cucumber and tomato
+		//new RecipeStep(STATIONS.SINK, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER], [], null), // wash cucumber and tomato
 		new RecipeStep(STATIONS.PREP, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.BREAD], [], CUTS.DICE), // dice cucumber, tomato, and bread
 		new RecipeStep(STATIONS.STOVE, [INGREDIENTS.TOMATO, INGREDIENTS.CUCUMBER, INGREDIENTS.BREAD], [], 10)
 	], [[], [0], [1]], ':D');
@@ -173,6 +173,7 @@ var STATES = {
 var GameModel = function() {
 	var me = this;
 	me.STATES = ko.observable(STATES);
+	me.CUTS = ko.observable(CUTS);
 	me.state = ko.observable(0);
 	me.title = ko.pureComputed(function() {
 		switch(me.state()) {
@@ -191,7 +192,7 @@ var GameModel = function() {
 		}
 	});
 	me.money = ko.observable(100);
-	me.inventory = ko.observableArray([new Ingredient(INGREDIENTS.BREAD, 10, 10, false)]);
+	me.inventory = ko.observableArray([new Ingredient(INGREDIENTS.BREAD, 10, 10, false), new Ingredient(INGREDIENTS.CUCUMBER, 10, 7, false), new Ingredient(INGREDIENTS.TOMATO, 20, 3, false)]);
 	me.supermarketInventory = ko.observableArray([new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
 												  new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
 												  new Ingredient(INGREDIENTS.TOMATO, 20, 3),
@@ -207,6 +208,85 @@ var GameModel = function() {
 	me.allStations = [me.leftStove, me.rightStove, me.leftSink, me.rightPrep];
 
 	me.currentRecipe = STUPID_RECIPE;
+
+	me.horzCuts = ko.observableArray([]);
+	me.vertCuts = ko.observableArray([]);
+	me.cutIndex = ko.observable(0);
+
+	me.currentCutStep = ko.pureComputed({
+		read: function() {
+			if (me.rightPrep.hasValidMove()) {
+				return me.currentRecipe.steps[me.rightPrep.hasValidMove()-1];	
+			} else {
+				return null;
+			}
+		}
+	})
+
+	me.currentChop = ko.pureComputed({
+		read: function() {
+			if (me.rightPrep.items().length > 0) {
+				return me.rightPrep.items()[me.cutIndex()];
+			} else {
+				return null;
+			}
+		}
+	});
+
+	me.currentCutType = ko.pureComputed({
+		read: function() {if (me.rightPrep.hasValidMove()) {
+			return me.currentCutStep().goal.id;
+		}}
+	});
+
+	me.showHorzCut = function(cut) {
+		return me.horzCuts().indexOf(cut) < 0;
+	}
+
+	me.registerHorzCut = function(cut) {
+		me.horzCuts.push(cut);
+
+	};
+
+	me.showVertCut = function(cut) {
+		return me.vertCuts().indexOf(cut) < 0;
+	}
+
+	me.registerVertCut = function(cut) {
+		me.vertCuts.push(cut);
+	};
+
+	me.cutHandler = ko.pureComputed({
+		read: function() {
+			if (me.rightPrep.hasValidMove()) {
+				var cutType = me.CUTS()[me.currentCutStep().goal.id];
+				var h = me.horzCuts();
+				var v = me.vertCuts();
+				for (var i = 0; i < cutType.horzCuts.length; i++) {
+					if (h.indexOf(cutType.horzCuts[i]) < 0) {
+						return false;
+					}
+				}
+				for (var j = 0; j < cutType.vertCuts.length; j++) {
+					if (v.indexOf(cutType.vertCuts[j]) < 0) {
+
+						return false;
+					}
+				}
+				me.rightPrep.items()[me.cutIndex()].cut();
+				me.cutIndex(me.cutIndex()+1);
+				me.horzCuts([]);
+				me.vertCuts([]);
+				if (me.cutIndex() == me.rightPrep.items().length) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+	});
 
 	// checks for valid moves
 	me.dropHandler = ko.pureComputed({

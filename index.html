@@ -84,7 +84,7 @@
 					<!-- /ko -->
 					<!-- ko with: rightPrep -->
 					<td id="right-prep" data-bind="drop: {value: latest, root: $root}">
-						<button class="btn-green" data-bind="enable: hasValidMove, click: function(){$root.state($root.STATES().CUTTINGBOARD)}">cut</button>
+						<button class="btn-green" data-bind="enable: hasValidMove, click: function(){$root.state($root.STATES().CUTTINGBOARD);}">cut</button>
 						<div data-bind="foreach: items">
 							<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index)">
 						</div>
@@ -109,14 +109,33 @@
 			<!-- ko with: rightPrep -->
 			<div class="inventory">
 				<div data-bind="foreach: items">
-					<div class="ingredient-div">
-						<img data-bind="attr: {src: $data.image()}, css: {unwashed: !$data.washed()}, click: $root.returnToFridge.bind($data, $data, $parent, $index)">
+					<div class="ingredient-div" data-bind="if: $index() != $root.cutIndex()">
+						<img data-bind="attr: {src: $data.image()}">
 					</div>
 				</div>
 			</div>
-			<button data-bind="click: $root.executeCut.bind($root, $data)" class="btn-full btn-orange">Wizard of Oz this cut!</button>
+			<div data-bind="if: $root.currentChop">
+				<div id="diceGrid" class="cutGrid" data-bind="if: $root.currentCutType() == $root.CUTS().DICE.id">
+					<div data-bind="foreach: $root.CUTS().DICE.horzCuts">
+						<div class="horizontal-cut cutgridline" data-bind="style: {marginTop: $data ? $data + 'px' : 0}, click: $root.registerHorzCut, visible: $root.showHorzCut($data)"></div>
+					</div>
+					<div data-bind="foreach: $root.CUTS().DICE.vertCuts">
+						<div class="vertical-cut cutgridline" data-bind="style: {marginLeft: $data  ? $data+ 'px' : 0}, click: $root.registerVertCut, visible: $root.showVertCut($data)"></div>
+					</div>
+				</div>
+				<div id="cuttingboard" data-bind="with: $root.currentChop">
+					<div class="chopped-ingredient-container">
+						<img data-bind="attr: {src: image()}"></img>
+					</div>
+					<div>
+						<img id="knife" src="images/Knife.png"></img>
+					</div>
+				</div>
+			</div>
+			<div data-bind="if: $root.cutHandler()">
+				<button data-bind="click: $root.executeCut.bind($root, $data)" class="btn-full btn-orange">Finish!</button>
+			</div>
 			<!-- /ko -->
-			<button data-bind="click: function(){state(STATES().DRAGDROP)}" class="btn-full btn-teal">Back</button>
 		</div>
 	</div>
 </body>
