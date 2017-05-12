@@ -9,10 +9,19 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js" type="text/javascript"></script>
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" type="text/javascript"></script>
 	<script src="javascripts/external/jquery.ui.touch-punch.min.js" type="text/javascript"></script>
+	<script src="javascripts/models.js" type="text/javascript"></script>
+	<script src="javascripts/database.js" type="text/javascript"></script>
 	<script src="javascripts/main.js" type="text/javascript"></script>
 </head>
 <body>
 	<div id="main">
+	<div data-bind="if: !playing()">
+		<button class="btn-full btn-green" data-bind="click: function(){level(LEVELS.EASY); playing(true);}">Easy Level</button>
+		<button class="btn-full btn-green" data-bind="click: function(){level(LEVELS.HARD); playing(true);}">Hard Level</button>
+	</div>
+
+	<div data-bind="if: playing()">
+
 		<div class="stats">
 			<p>Coins: <span data-bind="text: money"></span></p>
 			<p>Time: <span data-bind="timer: countdown">420</span></p>
@@ -172,6 +181,8 @@
 			</div>
 			<!-- /ko -->
 		</div>
-	</div>
+
+	</div> <!-- end of playing -->
+	</div> <!-- end of main -->
 </body>
 </html>
