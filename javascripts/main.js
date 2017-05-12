@@ -7,6 +7,7 @@ var GameModel = function() {
 	me.LEVELS = {EASY: 0, HARD: 1};
 	me.playing = ko.observable(false);
 	me.level = ko.observable(me.LEVELS.EASY);
+	me.recipeSelection = ko.observable(0);
 	me.state = ko.observable(0);
 	me.title = ko.pureComputed(function() {
 		switch(me.state()) {
@@ -25,28 +26,19 @@ var GameModel = function() {
 		}
 	});
 	me.money = ko.observable(100);
-	var OLD_LIME = new Ingredient(INGREDIENTS.LIME, 5, 2, false);
-	OLD_LIME.cut();
-	var OLD_BREAD = new Ingredient(INGREDIENTS.BREAD, 10, 10, false);
-	//OLD_BREAD.cut();
-	me.inventory = ko.observableArray([OLD_BREAD,
-									   OLD_LIME,
-									   new Ingredient(INGREDIENTS.SALT, 1, 100),
-									   new Ingredient(INGREDIENTS.PEPPER, 1, 100),
-									   new Ingredient(INGREDIENTS.OLIVE_OIL, 50, 100)
-									   ]);
-	me.supermarketInventory = ko.observableArray([new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
-												  new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
-												  new Ingredient(INGREDIENTS.CUCUMBER, 10, 7),
-												  new Ingredient(INGREDIENTS.TOMATO, 20, 3),
-												  new Ingredient(INGREDIENTS.TOMATO, 20, 3),
-												  new Ingredient(INGREDIENTS.TOMATO, 20, 3), 
-												  new Ingredient(INGREDIENTS.BREAD, 30, 14, false),
-												  new Ingredient(INGREDIENTS.JALAPENO, 5, 7),
-												  new Ingredient(INGREDIENTS.JALAPENO, 5, 7),
-									   			  new Ingredient(INGREDIENTS.OLIVE_OIL, 50, 100)
-												  ]);
+	
+	me.inventory = ko.observableArray(DEFAULT_INVENTORY);
+	me.supermarketInventory = ko.observableArray(SUPERMARKET_INVENTORY);
+	me.farmersmarketInventory = ko.observableArray(FARMERSMARKET_INVENTORY);
 
+	me.isEasyIngredient = function(ingredient) {
+		for (var i = 0; i < EASY_BUYS.length; i++ ) {
+			if (ingredient.name() == EASY_BUYS[i].displayName) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	me.countdown = ko.observable();
 	me.cookTimerLeft = ko.observable(0); //count up timer
@@ -57,7 +49,22 @@ var GameModel = function() {
 	me.rightPrep = new Station(STATIONS.PREP, 4);
 	me.allStations = [me.leftStove, me.rightStove, me.leftPlate, me.rightPrep];
 
-	me.currentRecipe = RECIPES.PANZANELLA;
+	me.recipeCandidates = ko.pureComputed({
+		read: function() {
+			if (me.level() == me.LEVELS.EASY) {
+				return EASY_RECIPES;
+			} else {
+				return HARD_RECIPES;
+			}
+		}
+	});
+
+	me.currentRecipe = ko.pureComputed({
+		read: function() {
+			return me.recipeCandidates()[me.recipeSelection()];
+		}
+	});
+
 	me.finishedRecipes = ko.observableArray([]);
 
 	me.horzCuts = ko.observableArray([]);
@@ -67,7 +74,7 @@ var GameModel = function() {
 	me.currentLeftStoveGoal = ko.pureComputed({
 		read: function() {
 			if (me.leftStove.hasValidMove() && me.leftStove.active()) {
-				return me.currentRecipe.steps[me.leftStove.hasValidMove()-1].goal;	
+				return me.currentRecipe().steps[me.leftStove.hasValidMove()-1].goal;	
 			} else {
 				return null;
 			}
@@ -77,7 +84,7 @@ var GameModel = function() {
 	me.currentRightStoveGoal = ko.pureComputed({
 		read: function() {
 			if (me.rightStove.hasValidMove() && me.rightStove.active()) {
-				return me.currentRecipe.steps[me.rightStove.hasValidMove()-1].goal;	
+				return me.currentRecipe().steps[me.rightStove.hasValidMove()-1].goal;	
 			} else {
 				return null;
 			}
@@ -87,7 +94,7 @@ var GameModel = function() {
 	me.currentCutStep = ko.pureComputed({
 		read: function() {
 			if (me.rightPrep.hasValidMove()) {
-				return me.currentRecipe.steps[me.rightPrep.hasValidMove()-1];	
+				return me.currentRecipe().steps[me.rightPrep.hasValidMove()-1];	
 			} else {
 				return null;
 			}
@@ -168,8 +175,8 @@ var GameModel = function() {
 /*			me.allStations.forEach(function(station) {
 				station.hasValidMove(false);
 			});*/
-			me.currentRecipe.steps.forEach(function(step, stepNum) {
-				if (me.currentRecipe.canStartStep(stepNum)) {
+			me.currentRecipe().steps.forEach(function(step, stepNum) {
+				if (me.currentRecipe().canStartStep(stepNum)) {
 					me.allStations.forEach(function(station) {
 						if (station.type.displayName == step.station.displayName && station.items().length == step.ingredients.length + step.utensils.length) {
 							var match = true;
@@ -192,6 +199,18 @@ var GameModel = function() {
 		var ing = me.supermarketInventory.splice(supermarketIndex, 1)[0];
 		me.inventory.push(ing);
 		me.money(me.money()-ing.price);
+		if (me.money() < 0) {
+			window.alert("hey, you ran out of money! be more careful!");
+		}
+	};
+
+	me.buyFromFarmersmarket = function(marketIndex) {
+		var ing = me.farmersmarketInventory.splice(marketIndex, 1)[0];
+		me.inventory.push(ing);
+		me.money(me.money()-ing.price);
+		if (me.money() < 0) {
+			window.alert("hey, you ran out of money! be more careful!");
+		}
 	};
 
 	me.returnToFridge = function(ingredient, station, ingredientIndex) {
@@ -204,9 +223,9 @@ var GameModel = function() {
 	me.executeStep = function(station) {
 		if (station.hasValidMove()) {
 			var stepNum = station.hasValidMove() - 1;
-			me.currentRecipe.completeStep(stepNum);
+			me.currentRecipe().completeStep(stepNum);
 			station.hasValidMove(false);
-			return me.currentRecipe.steps[stepNum];
+			return me.currentRecipe().steps[stepNum];
 		}
 	};
 
@@ -216,7 +235,7 @@ var GameModel = function() {
 			ing.pending(false);
 		});
 		station.items([]);*/
-		if (me.currentRecipe.finished()) {
+		if (me.currentRecipe().finished()) {
 			me.completeRecipe(station);
 		}
 		me.dropHandler(me.dropHandler() + 1);
@@ -230,7 +249,7 @@ var GameModel = function() {
 			ing.pending(false);
 		});
 		station.items([]);
-		if (me.currentRecipe.finished()) {
+		if (me.currentRecipe().finished()) {
 			me.completeRecipe(station);
 		}
 		me.dropHandler(me.dropHandler() + 1);
@@ -243,7 +262,7 @@ var GameModel = function() {
 			ing.pending(false);
 		});
 		station.items([]);
-		if (me.currentRecipe.finished()) {
+		if (me.currentRecipe().finished()) {
 			me.completeRecipe(station);
 		}
 		me.dropHandler(me.dropHandler() + 1);	
@@ -261,28 +280,39 @@ var GameModel = function() {
 		var step = me.executeStep(station);
 		station.items().forEach(function(ing, index) {
 			ing.cook();
-			ing.pending(false);
 		});
-		station.items([]);
-		if (me.currentRecipe.finished()) {
+		if (me.currentRecipe().finished()) {
 			me.completeRecipe(station);
 		}
 		timer(0);
 		station.active(false);
+		$("#countdown-timer").text(420);
 		me.dropHandler(me.dropHandler() + 1);
 	}
 
 	me.completeRecipe = function(lastStation) {
-		window.alert(me.currentRecipe.reward);
-		me.finishedRecipes.push(me.currentRecipe);
+		window.alert(me.currentRecipe().reward);
+		me.finishedRecipes.push(me.currentRecipe());
 
-		lastStation.items().forEach(function(ing, index) {
-			for (var i = 0; i < me.inventory().length; i++) {
-				if (ing.equals(me.inventory()[i])) {
-					me.inventory.splice(i, 1);
-					break;
+		me.allStations.forEach(function(station) {
+			station.items().forEach(function(ing, index) {
+				var isNoThrow = false;
+				ing.pending(false);
+				for (var j = 0; j < NO_THROW.length; j++) {
+					if (NO_THROW[j].displayName == ing.name()) {
+						isNoThrow = true;
+					}
 				}
-			}			
+				if (!isNoThrow) {
+					for (var i = 0; i < me.inventory().length; i++) {
+						if (ing.equals(me.inventory()[i])) {
+							me.inventory.splice(i, 1);
+							break;
+						}
+					}				
+				}
+				station.items([]);
+			});
 		});
 		me.state(me.STATES().SHOPORCOOK)
 

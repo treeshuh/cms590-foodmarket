@@ -50,6 +50,7 @@ function Ingredient(details, price, daysToExpiration, isDirty=false) {
 // utensils e.g. pots, pans
 function Utensil(name) {
 	this.name = name;
+	this.pending = ko.observable(false);
 	this.clean = true;
 
 	this.use = function() {

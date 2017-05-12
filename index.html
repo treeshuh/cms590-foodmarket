@@ -16,7 +16,7 @@
 <body>
 	<div id="main">
 	<div data-bind="if: !playing()">
-		<button class="btn-full btn-green" data-bind="click: function(){level(LEVELS.EASY); playing(true);}">Easy Level</button>
+		<button class="btn-full btn-green" data-bind="click: function(){level(LEVELS.EASY); playing(true); window.alert('Let\'s cook some beans!')}">Easy Level</button>
 		<button class="btn-full btn-green" data-bind="click: function(){level(LEVELS.HARD); playing(true);}">Hard Level</button>
 	</div>
 
@@ -24,7 +24,7 @@
 
 		<div class="stats">
 			<p>Coins: <span data-bind="text: money"></span></p>
-			<p>Time: <span data-bind="timer: countdown">420</span></p>
+			<p>Time: <span  id="countdown-timer" data-bind="timer: countdown">420</span></p>
 		</div>
 		<h3 data-bind="text: title"></h3>
 
@@ -49,15 +49,20 @@
 				</div>
 			</div>
 			<button data-bind="click: function(){state(STATES().SUPERMARKET)}" class="btn-full btn-orange">Shop at the SuperMarket</button>
-			<button disabled data-bind="click: function(){state(STATES().FARMERSMARKET)}" class="btn-full btn-orange">Shop at the Farmer's Market</button>
-			<button data-bind="click: function(){state(STATES().DRAGDROP)}" class="btn-full btn-green">Start Cooking!</button>
+			<button data-bind="enable: level() == LEVELS.HARD, click: function(){state(STATES().FARMERSMARKET)}" class="btn-full btn-orange">Shop at the Farmer's Market</button>
+			<div data-bind="if: level() == LEVELS.EASY">
+				<button data-bind="click: function(){state(STATES().DRAGDROP)}" class="btn-full btn-green">Start Cooking!</button>
+			</div>
+			<div data-bind="if: level() == LEVELS.HARD">
+				<button data-bind="click: function(){state(STATES().WHICHRECIPE)}" class="btn-full btn-green">Start Cooking!</button>
+			</div>
 		</div>
 
 		<div data-bind="visible: state() == STATES().SUPERMARKET">
-			<div class="inventory" id="supermarket-inventory">
+			<div class="inventory market-inventory" id="supermarket-inventory">
 				<h4>AVAILABLE FOR PURCHASE:</h4>
 				<div data-bind="foreach: supermarketInventory">
-					<div class="ingredient-div" data-bind="click: function(){$root.buyFromSupermarket($index())}">
+					<div class="ingredient-div" data-bind="click: function(){$root.buyFromSupermarket($index())}, css: {easy: ($root.level() == $root.LEVELS.EASY) && $root.isEasyIngredient($data)}">
 						<img data-bind="attr: {src: $data.image()}">
 						<p class="ingredient-name" data-bind="text: $data.name()"></p>
 						<p class="ingredient-price" data-bind="text: $data.price + ' coins'"></p>
@@ -68,6 +73,25 @@
 		</div>
 
 		<div data-bind="visible: state() == STATES().FARMERSMARKET">
+			<div class="inventory market-inventory" id="farmersmarket-inventory">
+				<h4>AVAILABLE FOR PURCHASE:</h4>
+				<div data-bind="foreach: farmersmarketInventory">
+					<div class="ingredient-div" data-bind="click: function(){$root.buyFromFarmersmarket($index())}">
+						<img data-bind="attr: {src: $data.image()}">
+						<p class="ingredient-name" data-bind="text: $data.name()"></p>
+						<p class="ingredient-price" data-bind="text: $data.price + ' coins'"></p>
+					</div>
+				</div>
+			</div>
+			<button data-bind="click: function(){state(STATES().SHOPORCOOK)}" class="btn-full btn-teal">Back</button>
+		</div>
+
+		<div data-bind="visible: state() == STATES().WHICHRECIPE">
+			<div data-bind="foreach: recipeCandidates()">
+				<button class="btn-full, btn-green" data-bind="click: function(){$root.state($root.STATES().DRAGDROP); $root.recipeSelection($index())}">
+					<span data-bind="text: name"></span>
+				</button>
+			</div>
 			<button data-bind="click: function(){state(STATES().SHOPORCOOK)}" class="btn-full btn-teal">Back</button>
 		</div>
 
@@ -134,8 +158,18 @@
 					</div>
 				</div>
 			</div>
-			<button data-bind="click: function(){state(STATES().SHOPORCOOK)}" class="btn-full btn-teal">Back</button>
+			<button data-bind="click: function(){state(STATES().HELP)}" class="btn-full btn-orange">Help</button>
 		</div> <!-- end of dragdrop state -->
+
+		<div data-bind="visible: state() == STATES().HELP">
+			<div data-bind="with: currentRecipe">
+				<div data-bind="text: name"></div>
+				<ol data-bind="foreach: steps">
+					<li data-bind="text: text"></li>
+				</ol>
+			</div>
+			<button data-bind="click: function(){state(STATES().DRAGDROP)}" class="btn-full btn-teal">Back</button>
+		</div>
 
 		<div id="prep-station" data-bind="visible: state() == STATES().CUTTINGBOARD">
 			<!-- ko with: rightPrep -->

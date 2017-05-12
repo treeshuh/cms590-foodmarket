@@ -116,23 +116,27 @@ button {
 	margin: 10px 0;
 }
 
-#supermarket-inventory .ingredient-div {
+.market-inventory .ingredient-div {
 	background-color: #aaa;
 	padding: 3px;
 	border-radius: 6px;
 	margin-bottom: 5px;
 }
 
-#supermarket-inventory .ingredient-div:hover {
+.market-inventory .ingredient-div.easy {
+	background-color: rgba(255, 133, 82, 1);
+}
+
+.market-inventory .ingredient-div:hover {
 	cursor: pointer;
 	background-color: rgba(190, 238, 98, 1);
 }
 
-#supermarket-inventory .ingredient-div:hover p {
+.market-inventory .ingredient-div:hover p {
 	color: rgba(57, 57, 58, 1);
 }	
 
-#supermarket-inventory .ingredient-div p {
+.market-inventory .ingredient-div p {
 	color: rgba(230, 230, 230, 1);
 }
 
