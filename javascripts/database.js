@@ -36,7 +36,7 @@ var INGREDIENTS = {
 	POTATO: {displayName: "Potato", imageSource: "images/Potato.png", cutImageSource: "images/ChoppedPotato.png"},
 	RIGATONI: {displayName: "Rigatoni Pasta", imageSource: "images/Rigatoni.png"},
 	SALT: {displayName: "Salt", imageSource: "images/Salt.png"},
-	SOY_SAUCE: {displayName: "Soy Sauce", imageSource: "images/Soysauce.png"},
+	SOY_SAUCE: {displayName: "Soy Sauce", imageSource: "images/SoySauce.png"},
 	TOMATO: {displayName: "Tomato", imageSource: "images/Tomato.png", cutImageSource: "images/ChoppedTomatoes.png"},
 	TOMATO_CANNED: {displayName: "Canned Tomatos", imageSource: "images/CannedTomatoes.png"},
 	BROTH_VEGETABLE: {displayName: "Vegetable Broth", imageSource: "images/VegetableBroth.png"},
