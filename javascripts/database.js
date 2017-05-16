@@ -86,8 +86,8 @@ RECIPES.BEANS = new Recipe("Spicy Green Beans",
 		new RecipeStep("Chop the green beans", STATIONS.PREP, [INGREDIENTS.BEANS], [], CUTS.DICE),
 		new RecipeStep("Mince some garlic", STATIONS.PREP, [INGREDIENTS.GARLIC], [], CUTS.MINCE),
 		new RecipeStep("Add the vegetable oil and green beans to the pan", STATIONS.STOVE, [INGREDIENTS.BEANS, INGREDIENTS.OIL_VEGETABLE], [], 5),
-		new RecipeStep("Cook the beans with soy sauce, garlic, and red pepper flakes until fragrant", STATIONS.STOVE, [INGREDIENTS.BEANS, INGREDIENTS.SOY_SAUCE, INGREDIENTS.GARLIC, INGREDIENTS.PEPPER_FLAKES], [], 20),
-		new RecipeStep("Mix the beans, more soy sauce, and more red pepper flakes to taste", STATIONS.PLATING, [INGREDIENTS.BEANS, INGREDIENTS.SOY_SAUCE, INGREDIENTS.PEPPER_FLAKES], [], null)
+		new RecipeStep("Cook the beans with soy sauce, garlic, and red pepper flakes until fragrant", STATIONS.STOVE, [INGREDIENTS.BEANS, INGREDIENTS.SOY_SAUCE, INGREDIENTS.GARLIC, INGREDIENTS.PEPPER_FLAKES], [], 10),
+		new RecipeStep("Mix the beans, more soy sauce, and more red pepper flakes to taste", STATIONS.PLATING, [INGREDIENTS.BEANS, INGREDIENTS.SOY_SAUCE, INGREDIENTS.PEPPER_FLAKES, INGREDIENTS.GARLIC], [], null)
 	], 
 	[
 		[], [], [0], [1, 2], [3]

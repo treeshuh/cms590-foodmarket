@@ -314,20 +314,23 @@ var GameModel = function() {
 				station.items([]);
 			});
 		});
+        clearInterval(_global_timer);
+		$("#countdown-timer").text(420);
 		me.state(me.STATES().SHOPORCOOK)
 
 	}
 }
 
+var _global_timer = null;
 //http://stackoverflow.com/questions/17473354/knockout-js-countdown-timer
 ko.bindingHandlers.timer = {
     update: function (element, valueAccessor) {
         // retrieve the value from the span
         var sec = $(element).text();
-        var timer = setInterval(function() { 
+        var _global_timer = setInterval(function() { 
             $(element).text(--sec);
             if (sec <= 0) {
-                clearInterval(timer);
+                clearInterval(_global_timer);
             }
         }, 1000);
     }
@@ -340,6 +343,7 @@ ko.bindingHandlers.verticalProgressBar = {
 		var values = ko.unwrap(valueAccessor());
 		if (!values.goal() && _timers[values.id]) {
 			clearInterval(_timers[values.id]);
+			_timers[values.id] = null;
 			$(element).removeClass("ready");
 			$(element).removeClass("over");
 			$(element).removeClass("pending");
@@ -356,7 +360,8 @@ ko.bindingHandlers.verticalProgressBar = {
 					$(element).addClass("ready");
 					$(element).removeClass("pending");
 				}
-				values.current(values.current() + 0.1);
+				values.current(values.current() + 0.5);
+
 				$(element).animate({height: String(Math.min(140, values.current()/values.goal()*140)) + "px"});
 			}, 500);
 		}
